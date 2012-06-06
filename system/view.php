@@ -17,6 +17,12 @@ class View {
      */
     public $data = array();
     
+    /**
+     * Initialize data.
+     * 
+     * @param   string  $view
+     * @param   array   $data 
+     */
     public function __construct($view, $data = array())
     {
         $this->view = $view;

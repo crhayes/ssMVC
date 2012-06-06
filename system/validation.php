@@ -2,22 +2,53 @@
 
 class Validation {
     
+    /**
+     * Store the data to be validated.
+     * 
+     * @var array 
+     */
     public $data = array();
     
+    /**
+     * Store the field validation rules.
+     * 
+     * @var array 
+     */
     private $rules = array();
     
+    /**
+     * Store any validation errors.
+     * 
+     * @var array 
+     */
     public $errors = array();
     
+    /**
+     * Initialize validation data.
+     * 
+     * @param   array   $data 
+     */
     function __construct($data)
     {
         $this->data = $data;
     }
     
+    /**
+     * Create a new validation instance.
+     * 
+     * @param   array   $data   Data to be validated.
+     * @return \static 
+     */
     public static function make($data)
     {
         return new static($data);
     }
     
+    /**
+     * Check the data of each field against each rule that has been applied to it.
+     * 
+     * @return boolean 
+     */
     public function check()
     {
         // Import data locally.
@@ -59,7 +90,8 @@ class Validation {
             }
         }
         
-        if (!empty($this->errors))
+        // If we have errors the check fails.
+        if ($this->invalid())
         {
             return false;
         }
@@ -67,9 +99,17 @@ class Validation {
         return true;
     }
 
-    
+    /**
+     * Add a set of rules to a field.
+     * 
+     * @param   mixed   $field  Either a field name (string) or an array with 
+     *                          fields as keys and strings (rules) as values.
+     * @param   string  $rules  Rules are added as a string separated by '|'.
+     * @return \Validation 
+     */
     public function rules($field, $rules = null)
     {
+        // If they sent in an array we iterate over each field and apply the rules.
         if (is_array($field))
         {
             foreach ($field as $field => $rule)
@@ -85,21 +125,68 @@ class Validation {
         return $this;
     }
     
+    /**
+     * Convert a field rule string to an array and store it.
+     * 
+     * @param   string  $field
+     * @param   string  $rule 
+     */
     public function rule($field, $rule)
     {
         $this->rules[$field] = (is_string($rule)) ? explode('|', $rule) : $rule;
     }
     
+    /**
+     * Parse a rule that requires a parameter into an array that contains the
+     * rule name and the paramater passed to it.
+     * 
+     * ie. min:5 will be parsed to array('min','5')
+     * 
+     * @param type $rule
+     * @return type 
+     */
     public function parse_rule($rule)
     {
         return explode(':', $rule);
     }
     
+    /**
+     * Check if the input is valid by checking if there are errors.
+     * 
+     * @return boolean 
+     */
+    public function valid()
+    {
+        return empty($this->errors);
+    }
+    
+    /**
+     * Check if the input is valid by checking if there are errors.
+     * 
+     * @return boolean 
+     */
+    public function invalid()
+    {
+        return ! $this->valid();
+    }
+    
+    /**
+     * Get the error message for a failed rule on a particular field.
+     * 
+     * @param   string   $field
+     * @param   type    $rule
+     * @return string 
+     */
     public function get_error_message($field, $rule)
     {
         return 'there was an error';
     }
     
+    /**
+     * Checks if there are any field errors.
+     * 
+     * @return  boolean 
+     */
     public function errors()
     {
         return $this->errors;

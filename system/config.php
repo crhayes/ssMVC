@@ -6,13 +6,18 @@
  * @author Chris
  */
 class Config {
-
+    
+    /**
+     * Store all of the configuration files we have loaded.
+     * 
+     * @var array 
+     */
     public static $loaded_files = array();
 
     /**
      * Load a configuration file and store it in an array.
      * 
-     * @param   type    $file_name  Name of the config file to load.
+     * @param   stringq$file_name  Name of the config file to load.
      */
     public static function load($file_name)
     {
@@ -36,21 +41,7 @@ class Config {
         // If there are no parameters we send back the whole config array.
         if (is_null($keys)) return $config;
         
-        // To retrieve the array item using dot syntax, we'll iterate through
-        // each segment in the key and look for that value. If it exists, we
-        // will return it, otherwise we will set the depth of the array and
-        // look for the next segment.
-        foreach (explode('.', $keys) as $key)
-        {
-            if (!is_array($config) or !array_key_exists($key, $config))
-            {
-                return $default;
-            }
-
-            $config = $config[$key];
-        }
-
-        return $config;
+        return Arr::get_from_string($keys, $config, $default);
     }
 
 }
