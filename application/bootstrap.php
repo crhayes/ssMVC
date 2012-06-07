@@ -1,18 +1,19 @@
 <?php
 
 // --------------------------------------------------------------
-// Load system configuration library.
-// --------------------------------------------------------------
-require_once SYSPATH.'config'.EXT;
-Config::load('default');
-
-// --------------------------------------------------------------
 // Load required system files.
 // --------------------------------------------------------------
 require_once SYSPATH.'router'.EXT;
 require_once SYSPATH.'controller'.EXT;
 require_once SYSPATH.'model'.EXT;
 require_once SYSPATH.'view'.EXT;
+require_once SYSPATH.'config'.EXT;
+require_once SYSPATH.'arr'.EXT;
+
+// --------------------------------------------------------------
+// Load default configuration.
+// --------------------------------------------------------------
+Config::load('default');
 
 // --------------------------------------------------------------
 // Instantiate necessary class objects.

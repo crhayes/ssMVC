@@ -51,7 +51,6 @@ class Router {
 
             // Break route into array to determine controller, action and params.
             $this->route = explode('/', rtrim(strtolower($this->requested_route), '/'));
-        
         }            
     }
     

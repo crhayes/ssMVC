@@ -17,13 +17,13 @@ class Config {
     /**
      * Load a configuration file and store it in an array.
      * 
-     * @param   stringq$file_name  Name of the config file to load.
+     * @param   string  $file_name  Name of the config file to load.
      */
     public static function load($file_name)
     {
-        if (file_exists($path = APPPATH.'config'.DS.$file_name.EXT))
+        if (file_exists($path = APPPATH.'config'.DS.str_replace('.', '/', $file_name).EXT))
         {
-            static::$loaded_files[$file_name] = require_once($path);
+            static::$loaded_files = static::$loaded_files + Arr::set_from_string($file_name, require_once($path));
         }
     }
 

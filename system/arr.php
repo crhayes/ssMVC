@@ -38,4 +38,19 @@ class Arr {
         return $array;
     }
     
+    public static function set_from_string($keys, $value)
+    {
+        $array = $value;
+        
+        foreach (array_reverse(explode('.', $keys)) as $key)
+        {
+            $value = $array;
+            unset($array);
+            
+            $array[$key] = $value;
+        }
+        
+        return $array;
+    }
+    
 }

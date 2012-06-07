@@ -24,12 +24,9 @@ class Index_Controller extends Controller {
     
     function action_about($section = null)
     {        
-        $result = Database::instance()->query("SELECT * FROM users")->fetch_all('array');
+        //$result = Database::instance()->query("SELECT * FROM users")->fetch_all('array');
         
-        echo Export::csv_from_mysql_resource($result, 'about');
-        
-        return View::make('about')
-            ->with('people', $result);
+        return View::make('about');;
     }
     
 }
