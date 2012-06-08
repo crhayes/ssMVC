@@ -2,6 +2,8 @@
 
 class Index_Controller extends Controller {
     
+    public $restful = false;
+    
     function action_index()
     { 
         $post = array('name' => 'Chris', 'email' => 'chayes@okd.com');
@@ -15,6 +17,13 @@ class Index_Controller extends Controller {
         {
             print_r($post->errors());
         }
+        
+        /*DB::query("SELECT * FROM users WHERE email = :email")
+            ->bind(':email', 'chris@twst.com')
+            ->execute()
+            ->fetch_all();*/
+        
+        echo URL::to_route('about');
         
         return View::make('index')
             ->with('another', 'I am testing')

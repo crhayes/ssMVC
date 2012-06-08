@@ -13,7 +13,7 @@ require_once SYSPATH.'arr'.EXT;
 // --------------------------------------------------------------
 // Load default configuration.
 // --------------------------------------------------------------
-Config::load('default');
+Config::load('application');
 
 // --------------------------------------------------------------
 // Instantiate necessary class objects.
@@ -52,6 +52,11 @@ function autoload_library($class_name)
 spl_autoload_register('autoload_system');
 spl_autoload_register('autoload_model');
 spl_autoload_register('autoload_library');
+
+// --------------------------------------------------------------
+// Create an alias for the Database class for ease of use.
+// --------------------------------------------------------------
+class_alias('Database', 'DB');
 
 // --------------------------------------------------------------
 // And we're set! Let's route the request.

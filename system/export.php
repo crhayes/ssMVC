@@ -1,5 +1,11 @@
-<?php
-
+<?php defined('SYSPATH') or die('No direct script access.');
+/**
+ * Export helper utility. 
+ * 
+ * @package     ssMVC - Super Simple MVC
+ * @author      Chris Hayes <chris at chrishayes.ca>
+ * @copyright   (c) 2012 Chris Hayes
+ */
 class Export {
 
     function csv_from_mysql_resource($resource, $file_name)

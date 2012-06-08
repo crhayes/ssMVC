@@ -1,9 +1,10 @@
-<?php
-
+<?php defined('SYSPATH') or die('No direct script access.');
 /**
- * Description of model
- *
- * @author Chris
+ * Base model class. All models must extend this class.
+ * 
+ * @package     ssMVC - Super Simple MVC
+ * @author      Chris Hayes <chris at chrishayes.ca>
+ * @copyright   (c) 2012 Chris Hayes
  */
 class Model {
     

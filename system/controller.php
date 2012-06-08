@@ -1,12 +1,14 @@
-<?php
-
+<?php defined('SYSPATH') or die('No direct script access.');
 /**
- * This is the base controller class. All application controllers will
- * extend this class.
- *
- * @author Chris Hayes
+ * Base controller class. All controllers must extend this class.
+ * 
+ * @package     ssMVC - Super Simple MVC
+ * @author      Chris Hayes <chris at chrishayes.ca>
+ * @copyright   (c) 2012 Chris Hayes
  */
 class Controller {
+    
+    public $restful = false;
     
     /**
      * Magic method to catch any controller action calls that do not exist.
