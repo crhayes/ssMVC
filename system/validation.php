@@ -1,15 +1,5 @@
-<?php defined('SYSPATH') or die('No direct script access.');
-/**
- * The validation library provides a utility that makes it dead simple to 
- * validate forms. It allows rules to be applied to form fields and then 
- * automagically validates the rules against each field.
- * 
- * This class also handles returning error messages via the messages class.
- * 
- * @package     ssMVC - Super Simple MVC
- * @author      Chris Hayes <chris at chrishayes.ca>
- * @copyright   (c) 2012 Chris Hayes
- */
+<?php
+
 class Validation {
     
     /**

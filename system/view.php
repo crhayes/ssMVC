@@ -1,14 +1,9 @@
-<?php defined('SYSPATH') or die('No direct script access.');
+<?php
+
 /**
- * Creates a wrapper for HTML pages with embedded PHP called 'views'. Views
- * allow you to cleanly your presentation code from your application logic.
- * 
- * Variables can be assigned with the view object and referenced locally within
- * the view.
- * 
- * @package     ssMVC - Super Simple MVC
- * @author      Chris Hayes <chris at chrishayes.ca>
- * @copyright   (c) 2012 Chris Hayes
+ * Description of view
+ *
+ * @author Chris
  */
 class View {
     

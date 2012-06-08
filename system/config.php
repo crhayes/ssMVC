@@ -1,18 +1,9 @@
-<?php defined('SYSPATH') or die('No direct script access.');
+<?php
+
 /**
- * Configuration utility. This class is used for loading multiple configuration
- * files and accessing configuration values.
- * 
- * Config files are stored in 'application/config' and can be stored in 
- * nested subfolders.'
- * 
- * Example Usage
- *      Config::load('default');
- *      Config::get('default.upload.path');
- * 
- * @package     ssMVC - Super Simple MVC
- * @author      Chris Hayes <chris at chrishayes.ca>
- * @copyright   (c) 2012 Chris Hayes
+ * Description of config
+ *
+ * @author Chris
  */
 class Config {
     
