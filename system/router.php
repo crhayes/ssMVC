@@ -1,5 +1,12 @@
-<?php
-
+<?php defined('SYSPATH') or die('No direct script access.');
+/**
+ * The router class handles routing requests. It takes a URL and determines
+ * which controller to load and the appropriate action to call.
+ * 
+ * @package     ssMVC - Super Simple MVC
+ * @author      Chris Hayes <chris at chrishayes.ca>
+ * @copyright   (c) 2012 Chris Hayes
+ */
 class Router {
     
     /**
@@ -79,7 +86,7 @@ class Router {
             : 'index';
         
         // Format the action so we can call it.
-        $action = $this->format_action($this->action);
+        $action = $this->format_action($this->action, $controller->restful);
         
         // If there is anything left in the array it becomes our parameters.
         if (is_array($route))
@@ -112,7 +119,7 @@ class Router {
      */
     private function get_default_controller()
     {
-        return Config::get('default.controller');
+        return Config::get('application.default.controller');
     }
     
     /**
@@ -164,13 +171,24 @@ class Router {
     }
     
     /**
-     * Format an action so we can call it.
+     * Format an action so we can call it. If the controller calling the
+     * request is using restful routing we prepend the request type.
      * 
      * @param   string  $action
      * @return  string 
      */
-    private function format_action($action)
+    private function format_action($action, $restful = false)
     {
+        if ($restful == true)
+        {
+            $method = $_SERVER['REQUEST_METHOD'];
+            
+            if ($method == 'GET')
+                return 'get_'.$action;
+            if ($method == 'POST')
+                return 'post_'.$action;
+        }
+        
         return 'action_'.$action;
     }
     

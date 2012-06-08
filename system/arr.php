@@ -1,5 +1,11 @@
-<?php
-
+<?php defined('SYSPATH') or die('No direct script access.');
+/**
+ * Array helper to make it easier to work with arrays.
+ * 
+ * @package     ssMVC - Super Simple MVC
+ * @author      Chris Hayes <chris at chrishayes.ca>
+ * @copyright   (c) 2012 Chris Hayes
+ */
 class Arr {
     
     /**
@@ -17,11 +23,12 @@ class Arr {
     }
     
     /**
-     * Given a "dot notation" string as an array key get an array value if it 
+     * Given an array key in "dot notation" get an array value if it 
      * exists, otherwise return a default value.
      * 
-     * @param type $keys
-     * @param type $array 
+     * @param   string  $keys   Array key as a dot notated string.
+     * @param   array   $array  Array to search through.
+     * @return  string
      */
     public static function get_from_string($keys, $array, $default = null)
     {
@@ -38,6 +45,13 @@ class Arr {
         return $array;
     }
     
+    /**
+     * Given an array key in dot notation create and set a value in an array.
+     * 
+     * @param   string  $keys   Array key as a dot notated string.   
+     * @param   $value  mixed   Value to set the array key.
+     * @return  array 
+     */
     public static function set_from_string($keys, $value)
     {
         $array = $value;
