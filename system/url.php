@@ -19,13 +19,13 @@ class Url {
         $protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https://" : "http://";
         
         // Get the host and remove any trailing slash.
-        $host = rtrim($_SERVER['HTTP_HOST'], '/');
+        $host = rtrim($_SERVER['HTTP_HOST'], '/').DS;
         
         // Get the application basepath.
         $base = Config::get('application.base_path');
         $base = ($base == '') ? '' : $base.DS;
         
-        return $protocol.$host.DS.$base;
+        return $protocol.$host.$base;
     }
     
     /**
