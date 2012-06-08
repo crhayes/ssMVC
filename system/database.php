@@ -9,7 +9,19 @@
  */
 class Database {
 
+    /**
+     * Store the query.
+     * 
+     * @var string 
+     */
     private $query;
+    
+    /**
+     * Store any bound fields used in the query.
+     * 
+     * @var array 
+     */
+    private $bound_fields = array();
     
     /**
      * Store the result we get from the database.
@@ -24,8 +36,6 @@ class Database {
      * @var int 
      */
     private $num_rows;
-    
-    private $bound_values = array();
 
     /**
      * Get the database configurtation details and connect
@@ -101,7 +111,7 @@ class Database {
      */
     public function bind($field, $value)
     {
-        $this->bound_values[$field] = $value;
+        $this->bound_fields[$field] = $value;
         
         return $this;
     }
@@ -115,10 +125,10 @@ class Database {
     private function replace_bound_fields($query)
     {
         // Import the bound fields locally.
-        $bound_values = $this->bound_values;
+        $bound_fields = $this->bound_fields;
         
         // Loop through the bound field and replace with values.
-        foreach ($bound_values as $field => $value)
+        foreach ($bound_fields as $field => $value)
         {
             $query = str_replace($field, "'$value'", $query);
         }

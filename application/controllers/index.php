@@ -6,11 +6,12 @@ class Index_Controller extends Controller {
     
     function action_index()
     { 
-        $post = array('name' => 'Chris', 'email' => 'chayes@okd.com');
+        $post = array('name' => 'Chris', 'email' => 'chayes@okd.com', 'age' => 'five is a number');
         
         $post = Validation::make($post)
             ->rules('name', 'required')
-            ->rules('email', 'required')
+            ->rules('email', 'required|email')
+            ->rules('age', 'required|range:0,10')
             ->rules('facebook', 'required');
         
         if ( ! $post->check())

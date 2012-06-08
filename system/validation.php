@@ -189,6 +189,7 @@ class Validation {
      */
     public function get_error_message($field, $rule)
     {
+        //TODO: Integrate with Messages class to return an error message.
         return 'there was an error';
     }
     
@@ -207,14 +208,11 @@ class Validation {
      * This function makes sure the field input is not empty.
      *
      * @param	string	$value	Field value we are checking the rule against.
-     * @return 	bool		Whether or not the field input validates.
+     * @return 	boolean         Whether or not the field input validates.
      */
     private function validate_required($value)
     {
-        if (empty($value))
-            return false;
-
-        return true;
+        return ! empty($value);
     }
 
     /**
@@ -222,12 +220,10 @@ class Validation {
      * This function makes sure the field input is a valid date.
      *
      * @param	string	$value	Field value we are checking the rule against.
-     * @return 	bool            Whether or not the field input validates.
+     * @return 	boolean         Whether or not the field input validates.
      */
     private function validate_date($value)
     {
-        date_default_timezone_set('America/Toronto');
-
         try
         {
             $dt = new DateTime(trim($value, $params = null));
@@ -241,14 +237,7 @@ class Validation {
         $day = $dt->format('d');
         $year = $dt->format('Y');
 
-        if (checkdate($month, $day, $year))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return checkdate($month, $day, $year);
     }
 
     /**
@@ -256,16 +245,11 @@ class Validation {
      * This function makes sure the field input is a valid email.
      *
      * @param	string	$value	Field value we are checking the rule against.
-     * @return 	bool		Whether or not the field input validates.
+     * @return 	boolean         Whether or not the field input validates.
      */
-    private function validate__email($value)
+    private function validate_email($value)
     {
-        if (filter_var($value, FILTER_VALIDATE_EMAIL))
-        {
-            return true;
-        }
-
-        return false;
+        return filter_var($value, FILTER_VALIDATE_EMAIL);
     }
 
     /**
@@ -274,11 +258,18 @@ class Validation {
      *
      * @param	string	$value	Field value we are checking the rule against.
      * @param	array	$params	Bottom and top values for range.
-     * @return 	bool		Whether or not the field input validates.
+     * @return 	boolean         Whether or not the field input validates.
      */
-    private function validate_range($value, $params)
+    private function validate_range($value, $param)
     {
-        return ( is_numeric($value) && $value >= $params[0] && $value <= $params[1] ) ? true : false;
+        $params = explode(',', $param);
+        
+        if (is_numeric($value))
+        {
+            return $value >= $params[0] && $value <= $params[1];
+        }
+        
+        return strlen($value) >= $params[0] && strlen($value) <= $params[1];
     }
 
     /**
@@ -287,11 +278,16 @@ class Validation {
      *
      * @param	string	$value	Field value we are checking the rule against.
      * @param	array	$param	Minimum length value specified.
-     * @return 	bool		Whether or not the field input validates.
+     * @return 	boolean         Whether or not the field input validates.
      */
-    private function min_length($value, $param)
+    private function validate_min($value, $param)
     {
-        return ( strlen($value) >= $param ) ? true : false;
+        if (is_numeric($value))
+        {
+            return $value >= $param;
+        }
+        
+        return strlen($value) >= $param;
     }
 
     /**
@@ -300,11 +296,16 @@ class Validation {
      *
      * @param	string	$value	Field value we are checking the rule against.
      * @param	array	$param	Maximum length value specified.
-     * @return 	bool		Whether or not the field input validates.
+     * @return 	boolean         Whether or not the field input validates.
      */
-    private function max_length($value, $param)
+    private function validate_max($value, $param)
     {
-        return ( strlen($value) <= $params ) ? true : false;
+        if (is_numeric($value))
+        {
+            return $value <= $param;
+        }
+        
+        return strlen($value) <= $param;
     }
 
     /**
@@ -313,18 +314,22 @@ class Validation {
      *
      * @param	string	$value	Field value submitted.
      * @param	string	$param	String to compare.
-     * @return 	bool		Returns true for different string, false for same string.
+     * @return 	boolean         Returns true for different string, false for same string.
      */
-    private function not_same($value, $param)
+    private function validate_same($value, $param)
     {
+        if (is_numeric($value))
+        {
+            return $value != $param;
+        }
+        
         // Compare two strings.
-        $compare = strcasecmp($value, $param);
-
-        // If they are the same validation check fails.
-        if ($compare == 0)
-            return false;
-
-        return true;
+        return (strcasecmp($value, $param) == 0) ? true : false;
+    }
+    
+    private function validate_not($value, $param)
+    {
+        return ! $this->validate_same($value, $param);
     }
 
     /**
@@ -332,9 +337,9 @@ class Validation {
      *
      * @param	string	$value	Field value submitted.
      * @param	string	$param	Minimum age a user can be.
-     * @return 	bool		Returns true if person is of age, false if not.
+     * @return 	boolean         Returns true if person is of age, false if not.
      */
-    private function is_of_age($value, $param)
+    private function validate_age($value, $param)
     {
         return strtotime("-$param year") >= strtotime($value);
     }
