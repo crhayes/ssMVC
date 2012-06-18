@@ -3,6 +3,26 @@
  * Database utility to make it easier to connect to and query a database.
  * This class also handles escaping data.
  * 
+ * Example Usages:
+ * ===============
+ * 
+ *  Query the Database:
+ *  -------------------
+ *    $users = DB::query("SELECT * FROM users")
+ *      ->execute();
+ * 
+ *  Fetch the first result row:
+ *  ---------------------------
+ *    $row = $users->fetch();
+ * 
+ *  Fetch a specific result row:
+ *  ----------------------------
+ *    $row = $users->fetch_row(3);
+ * 
+ *  Fetch all result rows:
+ *  ----------------------
+ *    $rows = $users->fetch_all();
+ * 
  * @package     ssMVC - Super Simple MVC
  * @author      Chris Hayes <chris at chrishayes.ca>
  * @copyright   (c) 2012 Chris Hayes
@@ -28,7 +48,7 @@ class Database {
      * 
      * @var array 
      */
-    private $result;
+    public $result;
 
     /**
      * Store the number of rows returned.
@@ -99,11 +119,12 @@ class Database {
      * Bind a field with a value. This makes it much cleaner to write queries.
      * 
      * Example usage:
+     * ==============
      * 
-     *      Database::query("SELECT * FROM user WHERE id = :id")
-     *          ->bind(':id', 5)
-     *          ->execute()
-     *          ->fetch_all();
+     *  Database::query("SELECT * FROM user WHERE id = :id")
+     *    ->bind(':id', 5)
+     *    ->execute()
+     *    ->fetch_all();
      * 
      * @param   string  $field
      * @param   string  $value
@@ -111,7 +132,7 @@ class Database {
      */
     public function bind($field, $value)
     {
-        $this->bound_fields[$field] = $value;
+        $this->bound_fields[$field] = mysql_real_escape_string($value);
         
         return $this;
     }
@@ -147,39 +168,66 @@ class Database {
         $query = $this->replace_bound_fields($this->query);
         
         // Run the query, store the result, and store the number of rows.
-        $this->result = mysql_query(mysql_real_escape_string($query));
+        $this->result = mysql_query($query);
         $this->num_rows = mysql_num_rows($this->result);
         
         return $this;
+    }
+    
+    /**
+     * Return a MySQL result resource.
+     * 
+     * @return MySQL Resource 
+     */
+    public function result()
+    {
+        return $this->result;
     }
 
     /**
      * Fetch a SQL query result row.
      *
-     * @param 	string  $return     Whether to return an object or array.
-     * @return	object              Return object by default, or array if specified.
+     * @param 	string  $type   Whether to return an object or array.
+     * @return	mixed           Return object by default, or array if specified.
      */
-    public function fetch($return = 'object')
+    public function fetch($type = 'object')
     {
         $result = $this->result;
 
-        if ($return == 'object')
+        if ($type == 'object')
             return mysql_fetch_object($result);
         else
             return mysql_fetch_assoc($result);
     }
     
     /**
-     * Return SQL query result as an array of objects.
+     * Fetch a specific row identified by a row number.
      * 
-     * @param   string  $return     Whether to return an object or array.
+     * @param   int     $row    Row number
+     * @param   string  $type   Whether to return an object or array.
      * @return  mixed 
      */
-    public function fetch_all($return = 'object')
+    public function fetch_row($row, $type = 'object')
+    {
+        mysql_data_seek($this->result, $row-1);
+        
+        return $this->fetch($type);
+    }
+    
+    /**
+     * Return SQL query result as an array of objects.
+     * 
+     * @param   string  $type   Whether to return an object or array.
+     * @return  mixed 
+     */
+    public function fetch_all($type = 'object')
     {
         $return = array();
         
-        while ($row = $this->fetch($return))
+        // Return the pointer back to the first row
+        mysql_data_seek($this->result, 0);
+        
+        while ($row = $this->fetch($type))
         {
             array_push($return, $row);
         }

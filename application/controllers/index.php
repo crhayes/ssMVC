@@ -2,9 +2,9 @@
 
 class Index_Controller extends Controller {
     
-    public $restful = false;
+    public $restful = true;
     
-    function action_index()
+    function get_index()
     { 
         $post = array('name' => 'Chris', 'email' => 'chayes@okd.com', 'age' => 'five is a number');
         
@@ -19,24 +19,37 @@ class Index_Controller extends Controller {
             print_r($post->errors());
         }
         
-        /*DB::query("SELECT * FROM users WHERE email = :email")
-            ->bind(':email', 'chris@twst.com')
-            ->execute()
-            ->fetch_all();*/
+        $users = DB::query("SELECT * FROM users")
+            ->execute();
         
-        echo URL::to_route('about');
+        echo '<pre>';
+        print_r($users->fetch_row(2));
         
         return View::make('index')
-            ->with('another', 'I am testing')
-            ->nest('test', View::make('test')
-                ->with('param1', 'this is a param'));
+            ->with('users', $users);
     }
     
-    function action_about($section = null)
+    function get_about($section = null)
     {        
         //$result = Database::instance()->query("SELECT * FROM users")->fetch_all('array');
         
-        return View::make('about');;
+        return View::make('template')
+            ->with('title', 'This is a test GET')
+            ->nest('content', View::make('about')
+                ->with('param', 'herrrrro'));
+    }
+    
+    function post_about()
+    {
+        $post = Validation::make($_POST)
+            ->rules('name', 'required');
+        
+        $post->check();
+        
+        return View::make('template')
+            ->with('title', 'This is a test POST')
+            ->nest('content', View::make('about')
+                    ->with('post', $post));
     }
     
 }

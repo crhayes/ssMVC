@@ -142,7 +142,7 @@ class Router {
      */
     private function action_exists($controller, $action)
     {
-        return method_exists($controller, $this->format_action($action));
+        return method_exists($controller, $this->format_action($action, $controller->restful));
     }
     
     /**

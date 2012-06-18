@@ -1,4 +1,8 @@
-<h1>This is the about page.</h1>
-<h2>Wasn't it easy to load?</h2>
+<h2>This is the content of the page.</h2>
+<p>And here is a variable that is sent in: </p>
 
-<h3>People</h3>
+
+<form method="post">
+    <input type="text" name="name">
+    <input type="submit">
+</form>
