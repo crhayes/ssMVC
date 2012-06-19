@@ -16,7 +16,7 @@ class Url {
     public static function base()
     {
         // Determine whether to use HTTP or HTTPS
-        $protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https://" : "http://";
+        $protocol = (Arr::get('HTTPS', $_SERVER) && $_SERVER['HTTPS'] != "off") ? "https://" : "http://";
         
         // Get the host and remove any trailing slash.
         $host = rtrim($_SERVER['HTTP_HOST'], '/').DS;
@@ -34,7 +34,7 @@ class Url {
      * @param   string  $route
      * @return  string 
      */
-    public function to_route($route)
+    public static function to_route($route)
     {
         return self::base().$route;
     }

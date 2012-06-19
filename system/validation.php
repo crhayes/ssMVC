@@ -1,4 +1,5 @@
 <?php defined('SYSPATH') or die('No direct script access.');
+
 /**
  * The validation library provides a utility that makes it dead simple to 
  * validate forms. It allows rules to be applied to form fields and then 
@@ -11,28 +12,28 @@
  * @copyright   (c) 2012 Chris Hayes
  */
 class Validation {
-    
+
     /**
      * Store the data to be validated.
      * 
      * @var array 
      */
     public $data = array();
-    
+
     /**
      * Store the field validation rules.
      * 
      * @var array 
      */
     private $rules = array();
-    
+
     /**
      * Store any validation errors.
      * 
      * @var array 
      */
     public $errors = array();
-    
+
     /**
      * Initialize validation data.
      * 
@@ -42,7 +43,7 @@ class Validation {
     {
         $this->data = $data;
     }
-    
+
     /**
      * Create a new validation instance.
      * 
@@ -53,7 +54,7 @@ class Validation {
     {
         return new static($data);
     }
-    
+
     /**
      * Check the data of each field against each rule that has been applied to it.
      * 
@@ -64,48 +65,48 @@ class Validation {
         // Import data locally.
         $data = $this->data;
         $rules = $this->rules;
-        
+
         // Get the expected fields.
         $expected_fields = array_keys($rules);
-        
+
         // Loop through the expected fields.
         foreach ($expected_fields as $field)
         {
             // Set up the data we will use.
-            $field_value = $data[$field];
-            $field_rules = $rules[$field];
+            $field_value = Arr::get($field, $data);
+            $field_rules = Arr::get($field, $rules);
             $param = null;
-            
+
             // Loop through each field rule.
-            foreach($field_rules as $rule)
+            foreach ($field_rules as $rule)
             {
                 // If the rule contains a colon we need to parse it into rule and parameter.
                 // i.e. min:5 -> $rule = min, $param = 5
                 if (strstr($rule, ':'))
                 {
                     $rule = $this->parse_rule($rule);
-                    
+
                     // If the parsed field rule is an array we get the rule and the param
                     if (is_array($rule))
                     {
                         list($rule, $param) = $rule;
-                    }                    
+                    }
                 }
-                                
+
                 // Call the validation function.
-                if ( ! call_user_func_array(array('Validation', 'validate_'.$rule), array($field_value, $param)))
+                if (!call_user_func_array(array('Validation', 'validate_' . $rule), array($field_value, $param)))
                 {
                     $this->errors[$field][$rule] = $this->get_error_message($field, $rule);
                 }
             }
         }
-        
+
         // If we have errors the check fails.
         if ($this->invalid())
         {
             return false;
         }
-        
+
         return true;
     }
 
@@ -126,15 +127,15 @@ class Validation {
             {
                 $this->rule($field, $rule);
             }
-            
+
             return $this;
         }
-        
+
         $this->rule($field, $rules);
-        
+
         return $this;
     }
-    
+
     /**
      * Convert a field rule string to an array and store it.
      * 
@@ -145,7 +146,7 @@ class Validation {
     {
         $this->rules[$field] = (is_string($rule)) ? explode('|', $rule) : $rule;
     }
-    
+
     /**
      * Parse a rule that requires a parameter into an array that contains the
      * rule name and the paramater passed to it.
@@ -159,7 +160,7 @@ class Validation {
     {
         return explode(':', $rule);
     }
-    
+
     /**
      * Check if the input is valid by checking if there are errors.
      * 
@@ -169,7 +170,7 @@ class Validation {
     {
         return empty($this->errors);
     }
-    
+
     /**
      * Check if the input is valid by checking if there are errors.
      * 
@@ -177,9 +178,9 @@ class Validation {
      */
     public function invalid()
     {
-        return ! $this->valid();
+        return !$this->valid();
     }
-    
+
     /**
      * Get the error message for a failed rule on a particular field.
      * 
@@ -192,7 +193,7 @@ class Validation {
         //TODO: Integrate with Messages class to return an error message.
         return 'there was an error';
     }
-    
+
     /**
      * Checks if there are any field errors.
      * 
@@ -202,22 +203,33 @@ class Validation {
     {
         return $this->errors;
     }
-    
+
     /**
-     * [Validation Rule] Any field with the 'is_required' rule applied is a required field (i.e. not empty).
-     * This function makes sure the field input is not empty.
+     * [Validation Rule] Validate that an attribute exists.
      *
-     * @param	string	$value	Field value we are checking the rule against.
+     * @param	mixed	$value	Field value we are checking the rule against.
      * @return 	boolean         Whether or not the field input validates.
      */
     private function validate_required($value)
     {
-        return ! empty($value);
+        if (is_null($value))
+        {
+            return false;
+        }
+        elseif (is_string($value) and trim($value) === '')
+        {
+            return false;
+        }
+        elseif ($value instanceof File)
+        {
+            return (string) $value->getPath() !== '';
+        }
+
+        return true;
     }
 
     /**
-     * [Validation Rule] Any field with the 'is_rdate' rule applied must be a valid date.
-     * This function makes sure the field input is a valid date.
+     * [Validation Rule] Validate that an attribute is a date.
      *
      * @param	string	$value	Field value we are checking the rule against.
      * @return 	boolean         Whether or not the field input validates.
@@ -241,43 +253,63 @@ class Validation {
     }
 
     /**
-     * [Validation Rule] Any field with the 'is_email' rule applied must be a valid email.
-     * This function makes sure the field input is a valid email.
+     * [Validation Rule] Validate that an attribute is an email address.
      *
      * @param	string	$value	Field value we are checking the rule against.
      * @return 	boolean         Whether or not the field input validates.
      */
     private function validate_email($value)
     {
-        return filter_var($value, FILTER_VALIDATE_EMAIL);
+        return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
     }
 
     /**
-     * [Validation Rule] Any field with the 'in_range' rule applied must be an integer within the specified range.
-     * This function makes sure the field input is an integer within the specified range.
+     * [Validation Rule] Validate that an attribute is an IP address.
+     * 
+     * @param   string  $value
+     * @return  boolean 
+     */
+    private function validate_ip($value)
+    {
+        return filter_var($value, FILTER_VALIDATE_IP) !== false;
+    }
+
+    /**
+     * [Validation Rule] Validate that an attribute is a URL.
+     * 
+     * @param   string  $value
+     * @return  boolean 
+     */
+    private function validate_url($value)
+    {
+        return filter_var($value, FILTER_VALIDATE_URL) !== false;
+    }
+
+    /**
+     * [Validation Rule] Validate that an attribute is within a given range.
      *
-     * @param	string	$value	Field value we are checking the rule against.
-     * @param	array	$params	Bottom and top values for range.
+     * @param	mixed	$value	Field value we are checking the rule against.
+     * @param	string	$params	Bottom and top values for range.
      * @return 	boolean         Whether or not the field input validates.
      */
     private function validate_range($value, $param)
     {
         $params = explode(',', $param);
-        
+
         if (is_numeric($value))
         {
             return $value >= $params[0] && $value <= $params[1];
         }
-        
+
         return strlen($value) >= $params[0] && strlen($value) <= $params[1];
     }
 
     /**
-     * [Validation Rule] Any field with the 'min_length' rule applied must be at least the specified length.
-     * This function makes sure the field input is at least the specified length.
+     * [Validation Rule] Validate that the size of an attribute is at least
+     * the minimum size.
      *
-     * @param	string	$value	Field value we are checking the rule against.
-     * @param	array	$param	Minimum length value specified.
+     * @param	mixed	$value	Field value we are checking the rule against.
+     * @param	mixed	$param	Minimum length value specified.
      * @return 	boolean         Whether or not the field input validates.
      */
     private function validate_min($value, $param)
@@ -286,16 +318,16 @@ class Validation {
         {
             return $value >= $param;
         }
-        
+
         return strlen($value) >= $param;
     }
 
     /**
-     * [Validation Rule] Any field with the 'max_length' rule applied must not be longer than the specified length.
-     * This function makes sure the field input is not longer than the specified length.
+     * [Validation Rule] Validate that the size of an attribute is not more
+     * than the max size.
      *
-     * @param	string	$value	Field value we are checking the rule against.
-     * @param	array	$param	Maximum length value specified.
+     * @param	mixed	$value	Field value we are checking the rule against.
+     * @param	mixed	$param	Maximum length value specified.
      * @return 	boolean         Whether or not the field input validates.
      */
     private function validate_max($value, $param)
@@ -304,17 +336,16 @@ class Validation {
         {
             return $value <= $param;
         }
-        
+
         return strlen($value) <= $param;
     }
 
     /**
-     * [Validation Rule] Any field with the 'not_same' rule applied must not contain the same value as the string it is 
-     * being compared against.
+     * [Validation Rule] Validate that an attribute is the same as a given value.
      *
-     * @param	string	$value	Field value submitted.
-     * @param	string	$param	String to compare.
-     * @return 	boolean         Returns true for different string, false for same string.
+     * @param	mixed	$value	Field value submitted.
+     * @param	mixed	$param	String to compare.
+     * @return 	boolean         
      */
     private function validate_same($value, $param)
     {
@@ -322,14 +353,22 @@ class Validation {
         {
             return $value != $param;
         }
-        
+
         // Compare two strings.
         return (strcasecmp($value, $param) == 0) ? true : false;
     }
-    
+
+    /**
+     * [Validation Rule] Validate that an attribute is not the same 
+     * as a given value.
+     * 
+     * @param   mixed  $value
+     * @param   mixed   $param
+     * @return  boolean 
+     */
     private function validate_not($value, $param)
     {
-        return ! $this->validate_same($value, $param);
+        return !$this->validate_same($value, $param);
     }
 
     /**
@@ -342,6 +381,42 @@ class Validation {
     private function validate_age($value, $param)
     {
         return strtotime("-$param year") >= strtotime($value);
+    }
+
+    /**
+     * [Validation Rule] Validate that an attribute contains only
+     * alphabetic characters.
+     *
+     * @param   mixed   $value
+     * @return  bool
+     */
+    protected function validate_alpha($value)
+    {
+        return preg_match('/^([a-z])+$/i', $value);
+    }
+
+    /**
+     * [Validation Rule] Validate that an attribute contains only
+     * alpha-numeric characters.
+     *
+     * @param  mixed   $value
+     * @return bool
+     */
+    protected function validate_alpha_num($value)
+    {
+        return preg_match('/^([a-z0-9])+$/i', $value);
+    }
+
+    /**
+     * [Validation Rule] Validate that an attribute contains only alpha-numeric
+     * characters, dashes, and underscores.
+     *
+     * @param  mixed   $value
+     * @return bool
+     */
+    private function validate_alpha_dash($value)
+    {
+        return preg_match('/^([-a-z0-9_-])+$/i', $value);
     }
 
 }
