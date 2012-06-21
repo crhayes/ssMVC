@@ -43,7 +43,7 @@ class View {
      */
     public static function make($view, $data = array())
     {
-        return new static($view, $data);
+        return new self($view, $data);
     }
     
     /**

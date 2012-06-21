@@ -32,7 +32,7 @@ class Config {
     {
         if (file_exists($path = APPPATH.'config'.DS.str_replace('.', '/', $file_name).EXT))
         {
-            static::$loaded_files = static::$loaded_files + Arr::set_from_string($file_name, require_once($path));
+            self::$loaded_files = self::$loaded_files + Arr::set_from_string($file_name, require_once($path));
         }
     }
 
@@ -45,7 +45,7 @@ class Config {
      */
     public static function get($keys, $default = null)
     {
-        $config = static::$loaded_files;
+        $config = self::$loaded_files;
         
         // If there are no parameters we send back the whole config array.
         if (is_null($keys)) return $config;

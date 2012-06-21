@@ -112,7 +112,7 @@ class Database {
      */
     public static function query($query)
     {        
-        return new static($query);
+        return new self($query);
     }
 
     /**

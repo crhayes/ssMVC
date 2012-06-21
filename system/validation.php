@@ -48,11 +48,11 @@ class Validation {
      * Create a new validation instance.
      * 
      * @param   array   $data   Data to be validated.
-     * @return \static 
+     * @return \self
      */
     public static function make($data)
     {
-        return new static($data);
+        return new self($data);
     }
 
     /**
