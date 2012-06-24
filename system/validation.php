@@ -39,9 +39,9 @@ class Validation {
      * 
      * @param   array   $data 
      */
-    function __construct($data)
+    function __construct($post, $files)
     {
-        $this->data = $data;
+        $this->data = array_merge($post, $files);
     }
 
     /**
@@ -50,9 +50,9 @@ class Validation {
      * @param   array   $data   Data to be validated.
      * @return \self
      */
-    public static function make($data)
+    public static function make($post = array(), $files = array())
     {
-        return new self($data);
+        return new self($post, $files);
     }
 
     /**
@@ -423,7 +423,7 @@ class Validation {
      *
      * @param   mixed   $value
      * @param   mixed   $param
-     * @return  bool
+     * @return  boolean
      */
     protected function validate_alpha($value, $param = null)
     {
@@ -436,7 +436,7 @@ class Validation {
      *
      * @param   mixed   $value
      * @param   mixed   $param
-     * @return  bool
+     * @return  boolean
      */
     protected function validate_alpha_num($value, $param = null)
     {
@@ -449,11 +449,49 @@ class Validation {
      *
      * @param   mixed   $value
      * @param   mixed   $param
-     * @return  bool
+     * @return  boolean
      */
     private function validate_alpha_dash($value, $param = null)
     {
         return preg_match('/^([-a-z0-9_-])+$/i', $value);
+    }
+    
+    /**
+     *[Validation Rule] Validate that a file has an allowed extension.
+     *  
+     * @param   array   $value
+     * @param   array   $params
+     * @return  boolean 
+     */
+    private function validate_file_type($value, $params)
+    {
+        // Get the file extension
+        $ext = pathinfo($value['name'], PATHINFO_EXTENSION);
+        
+        return in_array($ext, $params); die();
+    }
+    
+    /**
+     * [Validation Rule] Validate that the size of a file is not too large.
+     * 
+     * @param   array   $value
+     * @param   string  $param
+     * @return  boolean 
+     */
+    private function validate_file_size($value, $param)
+    {
+        // If the rule is specified in KB convert to bytes
+        if ($size = stristr($param, 'kb', true))
+        {
+            $size = $size * 1024;
+        }
+        // If the rule is specified in MB convert to bytes
+        else if ($size = stristr($param, 'mb'))
+        {
+            $size = $size * (1024*2);
+        }
+        
+        return $value['size'] <= $size;
     }
 
 }

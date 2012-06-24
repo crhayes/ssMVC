@@ -14,14 +14,14 @@ class Router {
      * 
      * @var string 
      */
-    private $requested_route;
+    public $requested_route;
     
     /**
      * An array of the route containing controller, action, and params.
      * 
      * @var array 
      */
-    private $route;
+    public $route;
     
     /**
      * Matched controller for the request.
@@ -72,7 +72,7 @@ class Router {
         
         // Check if the controller exists. If it does we shift it off the array,
         // if not we default to the index controller.
-        $this->controller = ($this->controller_exists($route[0]))
+        $this->controller = ($this->controller_exists(Arr::get(0, $route)))
             ? array_shift($route)
             : $this->get_default_controller();
         
@@ -81,7 +81,7 @@ class Router {
 
         // Check if the action exists. If it does we shift it off the array,
         // if not we default to the index action.
-        $this->action = ($this->action_exists($controller, $route[0]))
+        $this->action = ($this->action_exists($controller, Arr::get(0, $route)))
             ? array_shift($route)
             : 'index';
         
@@ -94,12 +94,8 @@ class Router {
             $this->params = $route;
         }
         
-        // Call the action with parameters and get the response.
-        $response = call_user_func_array(array($controller, $action), $this->params);
-        
-        // If the response is a View object we render it.
-        if ($response instanceOf View)
-            $response->render();
+        // Call the action with parameters and return the response.
+        return call_user_func_array(array($controller, $action), $this->params);
     }
     
     /**

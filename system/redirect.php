@@ -34,9 +34,9 @@ class Redirect {
      */
     public static function back()
     {
-        if (isset($_SERVER['HTTP_REFERER']))
+        if ($back = Request::referrer())
         {
-            self::_redirect($_SERVER['HTTP_REFERER'], '302');
+            self::_redirect($back, '302');
         }
     }
     

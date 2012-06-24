@@ -11,5 +11,10 @@ return array (
      */
     'default' => array(
         'controller' => 'index',
-    )
+    ),
+    
+    /**
+     * Application timezone. 
+     */
+    'timezone' => 'America/Toronto'
 );
