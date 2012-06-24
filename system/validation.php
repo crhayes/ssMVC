@@ -48,7 +48,7 @@ class Validation {
      * Create a new validation instance.
      * 
      * @param   array   $data   Data to be validated.
-     * @return \self
+     * @return  \self
      */
     public static function make($post = array(), $files = array())
     {
@@ -56,56 +56,97 @@ class Validation {
     }
 
     /**
-     * Check the data of each field against each rule that has been applied to it.
+     * Validate data based on a set of validation rules.
      * 
-     * @return boolean 
+     * @return  boolean 
      */
-    public function check()
+    public function valid()
     {
         // Load error messages.
         Message::load('error.validation');
-        
-        // Import data locally.
-        $data = $this->data;
-        $rules = $this->rules;
 
-        // Get the expected fields.
-        $expected_fields = array_keys($rules);
-
-        // Loop through the expected fields.
-        foreach ($expected_fields as $field)
+        // Loop through each field.
+        foreach ($this->rules as $field => $rules)
         {
-            // Set up the data we will use.
-            $field_value = Arr::get($field, $data);
-            $field_rules = Arr::get($field, $rules);
-            $params = null;
-
-            // Loop through each field rule.
-            foreach ($field_rules as $rule)
-            {
-                $rule = $this->parse_rule($rule);
-
-                // If the parsed field rule is an array we get the rule and the param
-                if (is_array($rule))
-                {
-                    list($rule, $params) = $rule;
-                }
-
-                // Call the validation function.
-                if (!call_user_func_array(array('Validation', 'validate_' . $rule), array($field_value, $params)))
-                {
-                    $this->errors[$field][$rule] = $this->get_error_message($field, $rule, $params);
-                }
-            }
+            // Loop through each of the field's rules.
+            foreach ($rules as $rule)
+                $this->check($field, $rule);
         }
 
-        // If we have errors the check fails.
-        if ($this->invalid())
-        {
-            return false;
-        }
+        return empty($this->errors);
+    }
 
-        return true;
+    /**
+     * Validate data based on a set of validation rules.
+     * 
+     * @return  boolean 
+     */
+    public function invalid()
+    {
+        return !$this->valid();
+    }
+    
+    /**
+     * Validate data based on a set of validation rules.
+     * 
+     * @return  boolean 
+     */
+    public function passes()
+    {
+        return $this->valid();
+    }
+    
+    /**
+     * Validate data based on a set of validation rules.
+     * 
+     * @return  boolean 
+     */
+    public function fails()
+    {
+        return $this->invalid();
+    }
+
+    /**
+     * Check each field's data against each rule that has been applied to it.
+     * 
+     * @param   string  $field
+     * @param   string  $rule 
+     */
+    public function check($field, $rule)
+    {
+        // Get the rule name and any parameters.
+        list($rule, $parameters) = $this->parse($rule);
+
+        // Get the value for the current field.
+        $value = Arr::get($field, $this->data);
+
+        // Before validating the field we need to make sure it is actually 
+        // validatable. We only run the validation rule if the value for the
+        // field is set (i.e. passes the validate_required rule), or if the
+        // rule is the required rule itself.
+        $validatable = $this->validatable($field, $value, $rule);
+
+        // Call the validation function.
+        if ($validatable and !$this->{'validate_' . $rule}($field, $value, $parameters))
+        {
+            $this->errors[$field][$rule] = $this->get_error_message($field, $rule, $parameters);
+        }
+    }
+
+    /**
+     * Determine if an attribute is validatable.
+     * 
+     * To be considered validatable, the attribute must either exist, or the rule
+     * being checked must implicitly validate "required", such as the "required" rule.
+     * 
+     * @param   sting   $field
+     * @param   mixed   $value
+     * @param   sring   $rule
+     * @return  boolean 
+     */
+    private function validatable($field, $value, $rule)
+    {
+        return $this->validate_required($field, $value) or $rule == 'required';
     }
 
     /**
@@ -142,93 +183,92 @@ class Validation {
      */
     public function rule($field, $rule)
     {
-        $this->rules[$field] = (is_string($rule)) ? explode('|', $rule) : $rule;
+        // Get an array of the rules.
+        $rules = (is_string($rule)) ? explode('|', $rule) : $rule;
+
+        // Trim each rule and then store it.
+        $this->rules[$field] = array_map('trim', $rules);
     }
 
     /**
      * Parse a rule that requires a parameter into an array that contains the
      * rule name and the paramater passed to it.
      * 
-     * ie. min:5 will be parsed to array('min','5')
+     * i.e. min:5 will be parsed to array('min','5')
      * 
-     * @param type $rule
-     * @return type 
+     * @param   string  $rule
+     * @return  array 
      */
-    public function parse_rule($rule)
+    public function parse($rule)
     {
+        $parameters = array();
+
         // If the rule has parameters we parse them out.
         if (strstr($rule, ':'))
         {
-            $rule = explode(':', $rule);
-            
+            list($rule, $parameters) = explode(':', $rule);
+
+            // Trim off any whitespace.
+            $rule = trim($rule);
+            $parameters = trim($parameters);
+
+
             // If there are multiple parameters they'll be separated by a
             // comma, so we'll parse those out as well.
-            if (strstr($rule[1], ','))
+            if (strstr($parameters, ','))
             {
-                $rule[1] = explode(',', $rule[1]);
+                $parameters = explode(',', $parameters);
+                $parameters = array_map('trim', $parameters);
             }
         }
-        
-        return $rule;
-    }
 
-    /**
-     * Check if the input is valid by checking if there are errors.
-     * 
-     * @return boolean 
-     */
-    public function valid()
-    {
-        return empty($this->errors);
-    }
-
-    /**
-     * Check if the input is valid by checking if there are errors.
-     * 
-     * @return boolean 
-     */
-    public function invalid()
-    {
-        return !$this->valid();
+        return array($rule, (array) $parameters);
     }
 
     /**
      * Get the error message for a failed rule on a particular field.
      * 
      * @param   string  $field
-     * @param   type    $rule
-     * @param   mixed   $params
-     * @return string 
+     * @param   string  $rule
+     * @param   array   $parameters
+     * @return  string 
      */
-    public function get_error_message($field, $rule, $params)
+    public function get_error_message($field, $rule, $parameters)
     {
-        $message = Message::get('error.validation.'.$rule);
-                
-        // Set up some find parameters...
-        $find = array(
-            ':field',
-            ':param1',
-            ':param2',
-            '-',
-            '_'
-        );            
-        // And some replace parameters...
-        $replace = array(
-            $field,
-            is_array($params) ? $params[0] : $params,
-            is_array($params) ? $params[1] : '',
-            ' ',
-            ' '
-        );
+        if ($message = Message::get("error.validation.$field.$rule"))
+        {
+            return $message;
+        }
+        else
+        {
+            $message = Message::get("error.validation.$rule");
 
-        // Use find and replace parameters to format the message.
-        return str_replace($find, $replace, $message);
+            // Set up some find parameters...
+            $find = array(
+                ':field',
+                ':param1',
+                ':param2',
+                '-',
+                '_'
+            );
+            // And some replace parameters...
+            $replace = array(
+                $field,
+                Arr::get(0, $parameters),
+                Arr::get(1, $parameters),
+                ' ',
+                ' '
+            );
+
+            // Use find and replace parameters to format the message.
+            return str_replace($find, $replace, $message);
+        }
     }
 
     /**
-     * Checks if there are any field errors.
+     * Get field errors.
      * 
-     * @return  boolean 
+     * @return  array
      */
     public function errors()
     {
@@ -236,13 +276,13 @@ class Validation {
     }
 
     /**
-     * [Validation Rule] Validate that an attribute exists.
-     *
-     * @param	mixed	$value	Field value we are checking the rule against.
-     * @param   mixed   $param
-     * @return 	boolean         Whether or not the field input validates.
+     * [Validation Rule] Validate that a value exists.
+     * 
+     * @param   string  $field
+     * @param   mxied   $value
+     * @return  boolean 
      */
-    private function validate_required($value, $param = null)
+    private function validate_required($field, $value)
     {
         if (is_null($value))
         {
@@ -261,17 +301,17 @@ class Validation {
     }
 
     /**
-     * [Validation Rule] Validate that an attribute is a date.
-     *
-     * @param	string	$value	Field value we are checking the rule against.
-     * @param   mixed   $param
-     * @return 	boolean         Whether or not the field input validates.
+     * [Validation Rule] Validate that a value is a date.
+     * 
+     * @param   string  $field
+     * @param   mixed   $value
+     * @return  boolean 
      */
-    private function validate_date($value, $param = null)
+    private function validate_date($field, $value)
     {
         try
         {
-            $dt = new DateTime(trim($value, $param));
+            $dt = new DateTime(trim($value));
         }
         catch (Exception $e)
         {
@@ -286,211 +326,308 @@ class Validation {
     }
 
     /**
-     * [Validation Rule] Validate that an attribute is an email address.
-     *
-     * @param	string	$value	Field value we are checking the rule against.
-     * @param   mixed   $param
-     * @return 	boolean         Whether or not the field input validates.
+     * [Validation Rule] Validate that a value is an email address.
+     * 
+     * @param   string  $field
+     * @param   mixed   $value
+     * @return  boolean 
      */
-    private function validate_email($value, $param = null)
+    private function validate_email($field, $value)
     {
         return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
     }
 
     /**
-     * [Validation Rule] Validate that an attribute is an IP address.
+     * [Validation Rule] Validate that a value is an IP address.
      * 
-     * @param   string  $value
-     * @param   mixed   $param
+     * @param   string  $field
+     * @param   mixed   $value
      * @return  boolean 
      */
-    private function validate_ip($value, $param = null)
+    private function validate_ip($field, $value)
     {
         return filter_var($value, FILTER_VALIDATE_IP) !== false;
     }
 
     /**
-     * [Validation Rule] Validate that an attribute is a URL.
+     * [Validation Rule] Validate that a value is a URL.
      * 
-     * @param   string  $value
-     * @param   mixed   $param
+     * @param   string  $field
+     * @param   mixed   $value
      * @return  boolean 
      */
-    private function validate_url($value, $param = null)
+    private function validate_url($field, $value)
     {
         return filter_var($value, FILTER_VALIDATE_URL) !== false;
     }
 
     /**
-     * [Validation Rule] Validate that an attribute is within a given range.
-     *
-     * @param	mixed	$value	Field value we are checking the rule against.
-     * @param	string	$params	Bottom and top values for range.
-     * @return 	boolean         Whether or not the field input validates.
+     * [Validation Rule] Validate that a value is between two values.
+     * @param   string  $field
+     * @param   mixed   $value
+     * @param   array   $parameters
+     * @return  boolean 
      */
-    private function validate_range($value, $params = null)
+    private function validate_between($field, $value, $parameters)
     {
         if (is_numeric($value))
         {
-            return $value >= $params[0] && $value <= $params[1];
+            return $value >= $parameters[0] && $value <= $parameters[1];
         }
 
-        return strlen($value) >= $params[0] && strlen($value) <= $params[1];
+        return strlen($value) >= $parameters[0] && strlen($value) <= $parameters[1];
     }
 
     /**
-     * [Validation Rule] Validate that the size of an attribute is at least
-     * the minimum size.
-     *
-     * @param	mixed	$value	Field value we are checking the rule against.
-     * @param	mixed	$param	Minimum length value specified.
-     * @return 	boolean         Whether or not the field input validates.
+     * [Validation Rule] Validate the size of a value is greater than a
+     * minimum value.
+     * 
+     * @param   string  $field
+     * @param   mixed   $value
+     * @param   array   $paramaters
+     * @return  boolean 
      */
-    private function validate_min($value, $param = null)
+    private function validate_min($field, $value, $paramaters)
     {
         if (is_numeric($value))
         {
-            return $value >= $param;
+            return $value >= $paramaters[0];
         }
 
-        return strlen($value) >= $param;
+        return strlen(trim($value)) >= $paramaters[0];
     }
 
     /**
-     * [Validation Rule] Validate that the size of an attribute is not more
-     * than the max size.
-     *
-     * @param	mixed	$value	Field value we are checking the rule against.
-     * @param	mixed	$param	Maximum length value specified.
-     * @return 	boolean         Whether or not the field input validates.
+     * [Validation Rule] Validate the size of a value is less than a
+     * maximum value.
+     * 
+     * @param   string  $field
+     * @param   sring   $value
+     * @param   array   $parameters
+     * @return  boolean 
      */
-    private function validate_max($value, $param = null)
+    private function validate_max($field, $value, $parameters)
     {
         if (is_numeric($value))
         {
-            return $value <= $param;
+            return $value <= $parameters[0];
         }
 
-        return strlen($value) <= $param;
+        return strlen(trim($value)) <= $parameters[0];
     }
 
     /**
-     * [Validation Rule] Validate that an attribute is the same as a given value.
-     *
-     * @param	mixed	$value	Field value submitted.
-     * @param	mixed	$param	String to compare.
-     * @return 	boolean         
+     * [Validation Rule] Validate that the value of one field is the same as
+     * the value of another field.
+     * 
+     * @param   string  $field
+     * @param   mixed   $value
+     * @param   array   $parameters
+     * @return  boolean 
      */
-    private function validate_same($value, $param = null)
+    private function validate_match($field, $value, $parameters)
+    {
+        $other = $parameters[0];
+
+        return isset($this->data[$other]) and $value == $this->data[$other];
+    }
+
+    /**
+     * [Validation Rule] Validate that the value of one field is different from
+     * the value of another field.
+     * 
+     * @param   string  $field
+     * @param   mixed   $value
+     * @param   array   $parameters
+     * @return  boolean 
+     */
+    private function validate_mismatch($field, $value, $parameters)
+    {
+        return !$this->validate_match($field, $value, $parameters);
+    }
+
+    /**
+     * [Validation Rule] Validate that a value is the same as a given value.
+     * 
+     * @param   string  $field
+     * @param   mixed   $value
+     * @param   array   $parameters
+     * @return  boolean 
+     */
+    private function validate_same($field, $value, $parameters)
     {
         if (is_numeric($value))
         {
-            return $value != $param;
+            return $value != $parameters[0];
         }
 
         // Compare two strings.
-        return (strcasecmp($value, $param) == 0) ? true : false;
+        return (strcasecmp($value, $parameters[0]) == 0) ? true : false;
     }
 
     /**
-     * [Validation Rule] Validate that an attribute is not the same 
-     * as a given value.
-     * 
+     * [Validation Rule] Validate that a value is different from a given value.
+     * @param   string  $field
      * @param   mixed   $value
-     * @param   mixed   $param
+     * @param   array   $parameters
      * @return  boolean 
      */
-    private function validate_not($value, $param = null)
+    private function validate_different($field, $value, $parameters)
     {
-        return !$this->validate_same($value, $param);
+        return !$this->validate_same($field, $value, $parameters);
     }
 
     /**
-     * [Validation Rule] Used to validate that a person is of a certain age.
-     *
-     * @param	string	$value	Field value submitted.
-     * @param	string	$param	Minimum age a user can be.
-     * @return 	boolean         Returns true if person is of age, false if not.
-     */
-    private function validate_age($value, $param = null)
-    {
-        return strtotime("-$param year") >= strtotime($value);
-    }
-
-    /**
-     * [Validation Rule] Validate that an attribute contains only
-     * alphabetic characters.
-     *
+     * [Validation Rule] Validate a person's age given their birthdate
+     * (formatted YYYY-MM-DD).
+     * 
+     * @param   string  $field
      * @param   mixed   $value
-     * @param   mixed   $param
-     * @return  boolean
+     * @param   array   $parameters
+     * @return  boolean 
      */
-    protected function validate_alpha($value, $param = null)
+    private function validate_age($field, $value, $parameters)
+    {
+        return strtotime("-$parameters[0] year") >= strtotime($value);
+    }
+
+    /**
+     * Validate that an attribute is numeric.
+     * 
+     * @param   string  $field
+     * @param   mixed   $value
+     * @return  boolean 
+     */
+    protected function validate_numeric($field, $value)
+    {
+        return is_numeric($value);
+    }
+
+    /**
+     * Validate that an attribute is an integer.
+     * 
+     * @param   string  $field
+     * @param   mixed   $value
+     * @return  boolean 
+     */
+    protected function validate_integer($field, $value)
+    {
+        return filter_var($value, FILTER_VALIDATE_INT) !== false;
+    }
+
+    /**
+     * [Validation Rule] Validate that a value contains only
+     * alphabetic characters.
+     * 
+     * @param   string  $field
+     * @param   mixed   $value
+     * @return  boolean 
+     */
+    protected function validate_alpha($field, $value)
     {
         return preg_match('/^([a-z])+$/i', $value);
     }
 
     /**
-     * [Validation Rule] Validate that an attribute contains only
+     * [Validation Rule] Validate that a value contains only
      * alpha-numeric characters.
-     *
+     * 
+     * @param   string  $field
      * @param   mixed   $value
-     * @param   mixed   $param
-     * @return  boolean
+     * @return  boolean 
      */
-    protected function validate_alpha_num($value, $param = null)
+    protected function validate_alpha_num($field, $value)
     {
         return preg_match('/^([a-z0-9])+$/i', $value);
     }
 
     /**
-     * [Validation Rule] Validate that an attribute contains only alpha-numeric
+     * [Validation Rule] Validate that a value contains only alpha-numeric
      * characters, dashes, and underscores.
-     *
+     * 
+     * @param   string  $field
      * @param   mixed   $value
-     * @param   mixed   $param
-     * @return  boolean
+     * @return  boolean 
      */
-    private function validate_alpha_dash($value, $param = null)
+    private function validate_alpha_dash($field, $value)
     {
         return preg_match('/^([-a-z0-9_-])+$/i', $value);
     }
-    
+
     /**
-     *[Validation Rule] Validate that a file has an allowed extension.
-     *  
-     * @param   array   $value
-     * @param   array   $params
+     * [Validation Rule] Validate that a value is a Canadian postal code.
+     * 
+     * @param   string  $field
+     * @param   mixed   $value
      * @return  boolean 
      */
-    private function validate_file_type($value, $params)
+    private function validate_postal_code($field, $value)
+    {
+        return preg_match('/[ABCEGHJKLMNPRSTVXY]\d[A-Z] \d[A-Z]\d/', $value);
+    }
+
+    /**
+     * [Validation Rule] Validate that a value is an American zip code.
+     * 
+     * @param   string  $field
+     * @param   mixed   $value
+     * @return  boolean 
+     */
+    private function validate_zip_code($field, $value)
+    {
+        return preg_match('/\d{5}(?(?=-)-\d{4})/', $value);
+    }
+
+    /**
+     * [Validation Rule] Validate that a value is in a comma-delimated list.
+     * 
+     * @param   string  $field
+     * @param   mixed   $value
+     * @param   array   $parameters
+     * @return  boolean 
+     */
+    private function validate_in($field, $value, $parameters)
+    {
+        return in_array($value, $parameters);
+    }
+
+    /**
+     * [Validation Rule] Validate that a file has an allowed extension.
+     * 
+     * @param   string  $field
+     * @param   array   $value
+     * @param   array   $parameters
+     * @return  boolean 
+     */
+    private function validate_file_type($field, $value, $parameters)
     {
         // Get the file extension
         $ext = pathinfo($value['name'], PATHINFO_EXTENSION);
-        
-        return in_array($ext, $params); die();
+
+        return in_array($ext, $parameters);
     }
-    
+
     /**
      * [Validation Rule] Validate that the size of a file is not too large.
      * 
+     * @param   string  $field
      * @param   array   $value
-     * @param   string  $param
+     * @param   array   $parameters
      * @return  boolean 
      */
-    private function validate_file_size($value, $param)
+    private function validate_file_size($field, $value, $parameters)
     {
         // If the rule is specified in KB convert to bytes
-        if ($size = stristr($param, 'kb', true))
+        if ($size = stristr($parameters[0], 'kb', true))
         {
             $size = $size * 1024;
         }
         // If the rule is specified in MB convert to bytes
-        else if ($size = stristr($param, 'mb'))
+        else if ($size = stristr($parameters[0], 'mb'))
         {
-            $size = $size * (1024*2);
+            $size = $size * (1024 * 2);
         }
-        
+
         return $value['size'] <= $size;
     }
 
