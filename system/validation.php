@@ -292,9 +292,9 @@ class Validation {
         {
             return false;
         }
-        elseif ($value instanceof File)
+        elseif (is_array($value) && $value['name'] == '' || is_array($value) && $value['error'])
         {
-            return (string) $value->getPath() !== '';
+            return false;
         }
 
         return true;

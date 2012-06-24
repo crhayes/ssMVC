@@ -7,14 +7,20 @@ return array (
     'base_path' => 'mvc',
     
     /**
+     * Application timezone. 
+     */
+    'timezone' => 'America/Toronto',
+    
+    /**
      * Application default values. 
      */
-    'default' => array(
+    'default' => array (
         'controller' => 'index',
     ),
     
     /**
-     * Application timezone. 
+     * Upload directory.
      */
-    'timezone' => 'America/Toronto'
+    'upload_directory' => APPPATH.'media'.DS.'uploads'
+    
 );
