@@ -55,9 +55,11 @@ class Router {
         {
             // Store the requested route.
             $this->requested_route = $_GET['rt'];
-
+            
+            $this->route = strtolower($this->requested_route);
+            
             // Break route into array to determine controller, action and params.
-            $this->route = explode('/', rtrim(strtolower($this->requested_route), '/'));
+            $this->route = explode('/', rtrim(str_replace('-', '_', $this->route), '/'));           
         }            
     }
     

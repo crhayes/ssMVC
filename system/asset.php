@@ -16,7 +16,7 @@ class Asset {
      */
     public static function stylesheet($href)
     {
-        $href = APPPATH.'assets'.DS.'css'.DS.$href;
+        $href = URL::Base().'assets'.DS.'css'.DS.$href;
         
         return "<link rel=\"stylesheet\" type=\"text/css\" href=\"$href\">";
     }
@@ -29,7 +29,7 @@ class Asset {
      */
     public static function script($src)
     {
-        $href = APPPATH.'assets'.DS.'js'.DS.$src;
+         $href = URL::Base().'assets'.DS.'js'.DS.$src;
         
         return "<script type=\"text/javascript\" src=\"$href\"></script>";
     }
@@ -42,7 +42,7 @@ class Asset {
      */
     public static function less($href)
     {
-        $href = APPPATH.'assets'.DS.'css'.DS.$href;
+        $href = URL::Base().'assets'.DS.'css'.DS.$href;
         
         return "<link rel=\"stylesheet/less\" type=\"text/css\" href=\"$href\">";
     }

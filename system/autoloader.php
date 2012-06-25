@@ -14,11 +14,23 @@ function autoload_model($class_name)
 {
     $class = strtolower($class_name);
     
-    // By convention models are prefixed with 'Model_', so we remove the
-    // prefix here so we don't need it in the file name.
-    $class = str_replace('model_', '', $class);
+    // By convention models are suffixed with '_Model', so we remove the
+    // suffix here so we don't need it in the file name.
+    $class = str_replace('_model', '', $class);
     
     if (file_exists($path = APPPATH.'models'.DS.$class.EXT))
+        require $path;
+}
+
+function autoload_controller($class_name)
+{
+    $class = strtolower($class_name);
+    
+    // By convention models are suffixed with '_Controller', so we remove the
+    // suffix here so we don't need it in the file name.
+    $class = str_replace('_controller', '', $class);
+    
+    if (file_exists($path = APPPATH.'controllers'.DS.$class.EXT))
         require $path;
 }
 
@@ -31,4 +43,5 @@ function autoload_library($class_name)
 
 spl_autoload_register('autoload_system');
 spl_autoload_register('autoload_model');
+spl_autoload_register('autoload_controller');
 spl_autoload_register('autoload_library');

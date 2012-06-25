@@ -1,10 +1,6 @@
 <?php
 
 return array (
-    /**
-     * Base path of the application; the directory relative to the root. 
-     */
-    'base_path' => 'mvc',
     
     /**
      * Application timezone. 
@@ -19,8 +15,10 @@ return array (
     ),
     
     /**
-     * Upload directory.
+     * File upload configuration.
      */
-    'upload_directory' => APPPATH.'media'.DS.'uploads'
+    'upload' => array (
+        'directory' => BASEPATH.'assets'.DS.'uploads'.DS
+    )
     
 );

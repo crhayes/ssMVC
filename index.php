@@ -43,8 +43,8 @@ Request::$route = new Router();
 //   'preview', made changes to the application, and are now
 //   previewing those changes (i.e. to a client).
 // --------------------------------------------------------------
-$application_path = (Request::is_preview()) ? 'preview' : 'application';
-define('APPPATH', BASEPATH.$application_path.DS);
+Request::$root = (Request::is_preview()) ? 'preview' : 'application';
+define('APPPATH', BASEPATH.Request::$root.DS);
 
 // --------------------------------------------------------------
 // Bootstrap the application.

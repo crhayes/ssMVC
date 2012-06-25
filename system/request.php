@@ -16,6 +16,13 @@ class Request {
     public static $route;
     
     /**
+     * Root directory of the application.
+     * 
+     * @var string 
+     */
+    public static $root;
+    
+    /**
      * Determine whether or not the current request is a preview of 
      * the application.
      * 

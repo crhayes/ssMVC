@@ -225,7 +225,8 @@ class Database {
         $return = array();
         
         // Return the pointer back to the first row
-        mysql_data_seek($this->result, 0);
+        if ($this->num_rows > 0)
+            mysql_data_seek($this->result, 0);
         
         while ($row = $this->fetch($type))
         {
